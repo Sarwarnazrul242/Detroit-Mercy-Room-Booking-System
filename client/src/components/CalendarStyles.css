@@ -1,0 +1,34 @@
+.custom-calendar {
+    width: 100%;
+}
+
+.custom-calendar .react-datepicker__input-container {
+    position: relative;
+}
+
+.custom-calendar .react-datepicker__input-container input {
+    width: 100%;
+    padding-right: 30px; /* Space for the calendar icon */
+}
+
+.custom-calendar .react-datepicker__input-container .react-datepicker-wrapper {
+    display: block;
+}
+
+.custom-calendar .react-datepicker__input-container .react-datepicker__input-container {
+    display: block;
+}
+
+.custom-calendar .react-datepicker__input-container .react-datepicker__input-container input {
+    width: 100%;
+}
+
+/* Updated styles for the calendar icon */
+.calendar-icon {
+    position: absolute;
+    top: 50%;
+    left: 200px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #555; /* Optional: Change the color of the icon */
+}

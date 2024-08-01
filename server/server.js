@@ -41,7 +41,8 @@ app.post("/myaccount", async (req, res) => {
             name: user.name,
             phoneNumber: user.phoneNumber,
             email: user.email,
-            status: user.status
+            status: user.status,
+            isSuspended: user.isSuspended
         });
     } catch (e) {
         res.json("fail");
@@ -53,15 +54,13 @@ app.get('/getBookings', async (req, res) => {
     try {
         const bookings = await bookingCollection.find({})
             .populate('buildingId')
-            .populate('userEmail'); // Populate the userEmail field with user details
+            .populate('userId'); // Changed from userEmail to userId
         res.json(bookings);
     } catch (e) {
         console.error('Error fetching bookings:', e);
         res.status(500).json("fail");
     }
 });
-
-
 
 
 app.post("/sendemail", async (req, res) => {
@@ -94,47 +93,35 @@ app.post("/sendemail", async (req, res) => {
         });
 
         let subject = '';
-        let text = '';
+        let html = '';
 
         if (type === 'verify') {
             subject = "Email Verification";
-            text = `Dear User,
-
-We received a request to verify your email for the Detroit Mercy Room Booking System. Please use the following One-Time Password (OTP) to verify your email:
-
-OTP: ${otp}
-
-This OTP is valid for the next 10 minutes. If you did not request this verification, please ignore this email or contact our support team immediately.
-
-Thank you for using our services.
-
-Best regards,
-Detroit Mercy Room Booking System
-Support Team
-`;
+            html = `<p>Dear User,</p>
+<p>We received a request to verify your email for the Detroit Mercy Room Booking System. Please use the following One-Time Password (OTP) to verify your email:</p>
+<p style="font-size: 20px; font-weight: bold; color: blue;">OTP: ${otp}</p>
+<p>This OTP is valid for the next 10 minutes. If you did not request this verification, please ignore this email or contact our support team immediately.</p>
+<p>Thank you for using our services.</p>
+<p>Best regards,<br>
+Detroit Mercy Room Booking System<br>
+Support Team</p>`;
         } else if (type === 'reset') {
             subject = "Password Reset Request";
-            text = `Dear User,
-
-We received a request to reset your password for the Detroit Mercy Room Booking System. Please use the following One-Time Password (OTP) to reset your password:
-
-OTP: ${otp}
-
-This OTP is valid for the next 10 minutes. If you did not request a password reset, please ignore this email or contact our support team immediately.
-
-Thank you for using our services.
-
-Best regards,
-Detroit Mercy Room Booking System
-Support Team
-`;
+            html = `<p>Dear User,</p>
+<p>We received a request to reset your password for the Detroit Mercy Room Booking System. Please use the following One-Time Password (OTP) to reset your password:</p>
+<p style="font-size: 20px; font-weight: bold; color: blue;">OTP: ${otp}</p>
+<p>This OTP is valid for the next 10 minutes. If you did not request a password reset, please ignore this email or contact our support team immediately.</p>
+<p>Thank you for using our services.</p>
+<p>Best regards,<br>
+Detroit Mercy Room Booking System<br>
+Support Team</p>`;
         }
 
         const mailOptions = {
             from: "Detroit Mercy Room Booking System <no-reply@udmercy.edu>",
             to: email,
             subject: subject,
-            text: text
+            html: html
         };
 
         const sendEmail = async (transporter, mailOptions) => {
@@ -153,6 +140,59 @@ Support Team
         res.json("fail");
     }
 });
+
+
+app.post('/cancelBooking', async (req, res) => {
+    const { bookingId, reason } = req.body;
+
+    try {
+        const booking = await bookingCollection.findById(bookingId).populate('userId').populate('buildingId');
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        booking.canceled = true;
+        booking.cancelReason = reason;
+        await booking.save();
+
+        // Ensure the email is defined
+        if (!booking.userId.email) {
+            return res.status(500).json({ message: "User email not found" });
+        }
+
+        // Send email to user with the cancellation reason
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.GMAIL_USER,
+                pass: process.env.GMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: 'Detroit Mercy Room Booking System <no-reply@udmercy.edu>',
+            to: booking.userId.email,
+            subject: 'Booking Cancellation Notice',
+            html: `<p>Dear ${booking.userId.name},</p>
+<p>Your booking for ${booking.room} in ${booking.buildingId.name} on ${new Date(booking.date).toLocaleDateString()} has been canceled for the following reason:</p>
+<p style="color: red;">${reason}</p>
+<p>If you have any questions or concerns, please contact our support team.</p>
+<p>To book a new room, please visit the following link:<br>
+<a href="http://localhost:3000/NewBookings">Book a new room</a></p>
+<p>Best regards,<br>
+Detroit Mercy Room Booking System Support Team</p>`
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ message: "Booking canceled and email sent" });
+    } catch (e) {
+        console.error("Error canceling booking:", e);
+        res.status(500).json({ message: "Error canceling booking" });
+    }
+});
+
+
 
 app.post("/signup", async (req, res) => {
     const form = req.body.form;
@@ -234,6 +274,28 @@ app.put('/updateAccount', async (req, res) => {
     }
 });
 
+// Add this to the server.js file
+app.get('/getUsers', async (req, res) => {
+    try {
+        const users = await userCollection.find({});
+        res.json(users);
+    } catch (e) {
+        console.error('Error fetching users:', e);
+        res.status(500).json("fail");
+    }
+});
+
+app.delete('/deleteUser/:id', async (req, res) => {
+    try {
+        await userCollection.findByIdAndDelete(req.params.id);
+        res.json('success');
+    } catch (e) {
+        console.error('Error deleting user:', e);
+        res.status(500).json("fail");
+    }
+});
+
+
 
 app.post('/addBuilding', upload.single('image'), async (req, res) => {
     const { name, description, floors, basement } = req.body;
@@ -261,6 +323,7 @@ app.post('/addBuilding', upload.single('image'), async (req, res) => {
 app.put('/addRoom/:id', upload.single('image'), async (req, res) => {
     try {
         const { name, description, seats, schedule, amenities } = req.body;
+        // console.log(schedule);
         const newRoom = {
             name,
             description,
@@ -282,6 +345,10 @@ app.put('/addRoom/:id', upload.single('image'), async (req, res) => {
 
 app.put('/editRoom/:buildingId/:roomId', upload.single('image'), async (req, res) => {
     try {
+        const { buildingId, roomId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(buildingId) || !mongoose.Types.ObjectId.isValid(roomId)) {
+            return res.status(400).json('Invalid ID');
+        }
         const { name, description, seats, schedule, amenities } = req.body;
         const updatedRoom = {
             name,
@@ -294,7 +361,7 @@ app.put('/editRoom/:buildingId/:roomId', upload.single('image'), async (req, res
             updatedRoom.image = req.file.filename;
         }
         await buildingCollection.updateOne(
-            { _id: new mongoose.Types.ObjectId(req.params.buildingId), 'rooms._id': new mongoose.Types.ObjectId(req.params.roomId) },
+            { _id: new mongoose.Types.ObjectId(buildingId), 'rooms._id': new mongoose.Types.ObjectId(roomId) },
             { $set: { 'rooms.$': updatedRoom } }
         );
         res.json({ success: true, room: updatedRoom });
@@ -304,26 +371,103 @@ app.put('/editRoom/:buildingId/:roomId', upload.single('image'), async (req, res
     }
 });
 
-// app.delete('/deleteRoom/:buildingId/:roomId', async (req, res) => {
-//     try {
-//         await buildingCollection.updateOne(
-//             { _id: new mongoose.Types.ObjectId(req.params.buildingId) },
-//             { $pull: { rooms: { _id: new mongoose.Types.ObjectId(req.params.roomId) } } }
-//         );
-//         res.json('success');
-//     } catch (err) {
-//         console.error('Error deleting room:', err);
-//         res.json('fail');
-//     }
-// });
+
+app.get('/getBuilding/:id', async (req, res) => {
+    try {
+        const building = await buildingCollection.findById(req.params.id).populate('rooms');
+        res.json(building);
+    } catch (e) {
+        console.error('Error fetching building:', e);
+        res.json("fail");
+    }
+});
+
+
+app.post('/getAvailableRooms', async (req, res) => {
+    try {
+        const { buildingId, date, startTime, endTime } = req.body;
+        const building = await buildingCollection.findById(buildingId);
+
+        if (!building) {
+            return res.status(404).json('Building not found');
+        }
+
+        const selectedStart = new Date(`${date}T${startTime}`);
+        const selectedEnd = new Date(`${date}T${endTime}`);
+        const selectedDay = selectedStart.toLocaleString('en-us', { weekday: 'short' });
+
+        // Get all bookings for the building on the selected date
+        const bookings = await bookingCollection.find({ 
+            buildingId: new mongoose.Types.ObjectId(buildingId), 
+            date 
+        });
+
+        const availableRooms = building.rooms.filter(room => {
+            // Check if the room is available on the selected day
+            const isAvailableOnDay = room.schedule.some(schedule => Array.isArray(schedule.days) && schedule.days.includes(selectedDay));
+            if (!isAvailableOnDay) return false;
+
+            return !bookings.some(booking => {
+                return booking.room === room.name &&
+                    ((selectedStart < new Date(`${date}T${booking.endTime}`) && selectedEnd > new Date(`${date}T${booking.startTime}`)));
+            });
+        });
+
+        res.json(availableRooms);
+    } catch (e) {
+        console.error('Error fetching available rooms:', e);
+        res.json("fail");
+    }
+});
+
+app.put('/pauseBuilding/:id', async (req, res) => {
+    try {
+        const buildingId = req.params.id;
+        const { isPaused } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(buildingId)) {
+            return res.status(400).json('Invalid ID');
+        }
+        await buildingCollection.updateOne(
+            { _id: new mongoose.Types.ObjectId(buildingId) },
+            { $set: { isPaused: isPaused } }
+        );
+        res.json('success');
+    } catch (err) {
+        console.error('Error pausing/unpausing building:', err);
+        res.status(500).json('fail');
+    }
+});
+
+app.put('/pauseRoom/:buildingId/:roomId', async (req, res) => {
+    try {
+        const { buildingId, roomId } = req.params;
+        const { isPaused } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(buildingId) || !mongoose.Types.ObjectId.isValid(roomId)) {
+            return res.status(400).json('Invalid ID');
+        }
+
+        await buildingCollection.updateOne(
+            { _id: new mongoose.Types.ObjectId(buildingId), 'rooms._id': new mongoose.Types.ObjectId(roomId) },
+            { $set: { 'rooms.$.isPaused': isPaused } }
+        );
+        res.json('success');
+    } catch (err) {
+        console.error('Error pausing/unpausing room:', err);
+        res.json('fail');
+    }
+});
+
+
 
 app.delete('/deleteRoom/:buildingId/:roomId', async (req, res) => {
     try {
-        const buildingId = new mongoose.Types.ObjectId(req.params.buildingId);
-        const roomId = new mongoose.Types.ObjectId(req.params.roomId);
+        const { buildingId, roomId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(buildingId) || !mongoose.Types.ObjectId.isValid(roomId)) {
+            return res.status(400).json('Invalid ID');
+        }
         await buildingCollection.updateOne(
-            { _id: buildingId },
-            { $pull: { rooms: { _id: roomId } } }
+            { _id: new mongoose.Types.ObjectId(buildingId) },
+            { $pull: { rooms: { _id: new mongoose.Types.ObjectId(roomId) } } }
         );
         res.json('success');
     } catch (err) {
@@ -361,9 +505,6 @@ app.post('/editBuilding/:id', upload.single('image'), async (req, res) => {
     }
 });
 
-
-
-
 app.get('/getBuildings', async (req, res) => {
     try {
         const buildings = await buildingCollection.find({});
@@ -373,6 +514,17 @@ app.get('/getBuildings', async (req, res) => {
         res.json("fail");
     }
 });
+
+app.delete('/deleteBooking/:id', async (req, res) => {
+    try {
+        await bookingCollection.findByIdAndDelete(req.params.id);
+        res.json('success');
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        res.status(500).json('fail');
+    }
+});
+
 
 app.get('/getBuilding/:id', async (req, res) => {
     try {
@@ -398,8 +550,15 @@ app.delete('/deleteBuilding/:id', async (req, res) => {
 
 app.post('/getUserBookings', async (req, res) => {
     try {
-        const { email } = req.body;
-        const bookings = await bookingCollection.find({ userEmail: email }).populate('buildingId');
+        const { userEmail } = req.body;
+        const user = await userCollection.findOne({ email: userEmail });
+        if (!user) {
+            return res.status(404).json('User not found');
+        }
+
+        const bookings = await bookingCollection.find({ userId: user._id })
+            .populate('buildingId');
+
         res.json(bookings);
     } catch (e) {
         console.error('Error fetching bookings:', e);
@@ -407,9 +566,28 @@ app.post('/getUserBookings', async (req, res) => {
     }
 });
 
+
+app.delete('/cancelBooking/:bookingId', async (req, res) => {
+    try {
+        const bookingId = req.params.bookingId;
+        await bookingCollection.findByIdAndDelete(bookingId);
+        res.json('success');
+    } catch (e) {
+        console.error('Error cancelling booking:', e);
+        res.json("fail");
+    }
+});
+
+
 app.post('/bookRoom', async (req, res) => {
     try {
         const { buildingId, room, date, startTime, endTime, userEmail } = req.body;
+
+        // Fetch the user's ObjectId based on their email
+        const user = await userCollection.findOne({ email: userEmail });
+        if (!user) {
+            return res.status(404).json('User not found');
+        }
 
         // Check for booking conflicts
         const conflict = await bookingCollection.findOne({
@@ -417,13 +595,28 @@ app.post('/bookRoom', async (req, res) => {
             room: room,
             date: date,
             $or: [
-                { startTime: { $lt: endTime, $gt: startTime } },
-                { endTime: { $gt: startTime, $lt: endTime } }
+                { startTime: { $lt: endTime, $gte: startTime } },
+                { endTime: { $lte: endTime, $gt: startTime } },
+                { startTime: { $lte: startTime }, endTime: { $gte: endTime } }
             ]
         });
 
         if (conflict) {
             return res.json('conflict');
+        }
+
+        // Check for duplicate booking by the same user
+        const duplicateBooking = await bookingCollection.findOne({
+            buildingId: new mongoose.Types.ObjectId(buildingId),
+            room: room,
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            userId: user._id
+        });
+
+        if (duplicateBooking) {
+            return res.json('duplicate');
         }
 
         const booking = new bookingCollection({
@@ -432,7 +625,7 @@ app.post('/bookRoom', async (req, res) => {
             date,
             startTime,
             endTime,
-            userEmail: user._id
+            userId: user._id // Use the user's ObjectId
         });
         
         await booking.save();
@@ -443,6 +636,68 @@ app.post('/bookRoom', async (req, res) => {
     }
 });
 
+// app.put('/suspendUser/:id', async (req, res) => {
+//     try {
+//         const userId = req.params.id;
+//         const { isSuspended } = req.body;
+//         await userCollection.updateOne(
+//             { _id: userId },
+//             { $set: { isSuspended: isSuspended } }
+//         );
+//         res.json('success');
+//     } catch (e) {
+//         console.error('Error suspending/unsuspending user:', e);
+//         res.status(500).json('fail');
+//     }
+// });
+
+app.put('/suspendUser/:id', async (req, res) => {
+    const { id } = req.params;
+    const { isSuspended, reason } = req.body;
+    try {
+        const user = await userCollection.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.isSuspended = isSuspended;
+        user.suspensionReason = reason;
+        await user.save();
+
+        if (isSuspended) {
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.GMAIL_USER,
+                    pass: process.env.GMAIL_PASS
+                }
+            });
+
+            const mailOptions = {
+                from: "Detroit Mercy Room Booking System <no-reply@udmercy.edu>",
+                to: user.email,
+                subject: "Account Suspended",
+                text: `Dear ${user.name},
+
+Your account has been suspended for the following reason:
+
+"${reason}"
+
+If you have any questions or need further assistance, please contact our support team.
+
+Thank you,
+Detroit Mercy Room Booking System`
+            };
+
+            await transporter.sendMail(mailOptions);
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('Error suspending user:', e);
+        res.status(500).json({ success: false, message: 'Error suspending user' });
+    }
+});
 
 
 

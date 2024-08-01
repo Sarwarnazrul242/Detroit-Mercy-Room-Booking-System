@@ -1,0 +1,76 @@
+
+
+.booking-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 500px; /* Adjust this value to make the card wider */
+    width: 100%;
+    margin: 0 auto;
+}
+
+.booking-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.booking-card-content {
+    padding: 16px;
+    text-align: center;
+}
+
+.booking-card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.booking-card-room {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.booking-card-date,
+.booking-card-time {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #777;
+}
+
+.booking-card button {
+    background-color: #e53935;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.booking-card button svg {
+    margin-right: 8px;
+}
+
+.booking-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; 
+    gap: 16px; 
+    max-width: 1600px; 
+    margin: 0 auto; 
+}
+
+@media (min-width: 768px) {
+    .booking-grid {
+        justify-content: center; /* Align items to the center on larger screens */
+    }
+}

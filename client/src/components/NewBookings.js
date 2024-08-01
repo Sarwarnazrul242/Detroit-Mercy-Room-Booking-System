@@ -11,7 +11,8 @@ export default function NewBookings() {
         const fetchBuildings = async () => {
             try {
                 const res = await axios.get('http://localhost:8000/getBuildings');
-                setBuildings(res.data);
+                const activeBuildings = res.data.filter(building => !building.isPaused); // Filter out paused buildings
+                setBuildings(activeBuildings);
             } catch (e) {
                 toast.error("Something went wrong while fetching buildings!");
             }
@@ -39,22 +40,6 @@ export default function NewBookings() {
                         )}
                         <div className='p-4'>
                             <h2 className='text-2xl font-bold mb-2'>{building.name}</h2>
-                            {/* <p className='text-gray-700 mb-4'>{building.description}</p> */}
-                            {/* <h3 className='text-lg font-semibold'>Rooms:</h3> */}
-                            <ul className='list-disc list-inside'>
-                                {building.rooms.map((room, index) => (
-                                    <li key={index} className='mb-2'>
-                                        <strong>{room.name}</strong>
-                                        <ul className='list-disc list-inside ml-4'>
-                                            {room.schedule.map((schedule, sIndex) => (
-                                                <li key={sIndex}>
-                                                    {schedule.startTime} - {schedule.endTime}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </li>
-                                ))}
-                            </ul>
                         </div>
                     </div>
                 ))}

@@ -4,7 +4,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import logo from './Images/frontlogo.png'; 
+import Modal from 'react-modal'; // Import Modal component
+import logo from './Images/frontlogo.png';
+import './RoomStyle.css';
+
+Modal.setAppElement('#root'); // Set the root element for accessibility
 
 export default function Login() {
     const [form, setForm] = useState({
@@ -13,6 +17,7 @@ export default function Login() {
     });
     const [emailError, setEmailError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // State to handle modal visibility
     const navigate = useNavigate();
 
     const handleInputChange = (e) => {
@@ -46,30 +51,36 @@ export default function Login() {
         }
 
         try {
-            await axios.post("http://localhost:8000/login", {
+            const res = await axios.post("http://localhost:8000/login", {
                 email: form.email,
                 password: form.password
-            })
-            .then(res => {
-                if (res.data === "loginPass") {
-                    const fullEmail = `${form.email}@udmercy.edu`;
+            });
+
+            if (res.data === "loginPass") {
+                const fullEmail = `${form.email}@udmercy.edu`;
+                const userRes = await axios.post("http://localhost:8000/myaccount", { cookieValue: fullEmail });
+                if (userRes.data.isSuspended) {
+                    setIsModalOpen(true); // Show the modal if the user is suspended
+                } else {
                     Cookies.set('email', fullEmail, { expires: 15 });
                     toast.success("Successfully Logged in!");
-                    // Navigate to another page if needed
-                } else if (res.data === "nouser") {
-                    toast.error("This email is not registered");
-                } else if (res.data === "loginFail") {
-                    toast.error("Invalid Credentials");
-                } else if (res.data === "fail") {
-                    toast.error("Something went wrong!");
+                    navigate('/login');
                 }
-            })
-            .catch(e => {
+            } else if (res.data === "nouser") {
+                toast.error("This email is not registered");
+            } else if (res.data === "loginFail") {
+                toast.error("Invalid Credentials");
+            } else if (res.data === "fail") {
                 toast.error("Something went wrong!");
-            });
+            }
         } catch (e) {
             toast.error("Something went wrong!");
         }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        navigate('/login'); // Redirect to login page when modal is closed
     };
 
     return (
@@ -121,14 +132,25 @@ export default function Login() {
                     </button>
                 </div>
                 <div className="text-center mb-8">
-                    <Link to='/signup' className="text-blue-700 underline mx-4">Create an Account</Link>
+                    <Link to='/signup' className="text-black-700 underline mx-4">Create an Account</Link>
                     <span className="mx-2">|</span>
-                    <Link to='/forgotpassword' className="text-blue-700 underline mx-4">Forgot Password</Link>
+                    <Link to='/forgotpassword' className="text-black-700 underline mx-4">Forgot Password</Link>
                 </div>
                 <div className="flex justify-center mt-6">
-                <input className="text-white bg-black border-0 py-2 px-6 focus:outline-none hover:bg-gray-800 rounded-full text-lg cursor-pointer" type="submit" value='Log In' />
+                    <input className="text-white bg-black border-0 py-2 px-6 focus:outline-none hover:bg-gray-800 rounded-full text-lg cursor-pointer" type="submit" value='Log In' />
                 </div>
             </form>
+            <Modal
+                isOpen={isModalOpen}
+                onRequestClose={closeModal}
+                contentLabel="Account Suspended"
+                className="modal"
+                overlayClassName="overlay"
+            >
+                <h2 className="text-2xl font-bold mb-4">Account Suspended</h2>
+                <p className="mb-4">Your account has been suspended. Please contact the admin to know why.</p>
+                <button onClick={closeModal} className="bg-red-700 text-white py-2 px-4 rounded">OK</button>
+            </Modal>
             <ToastContainer />
         </div>
     );

@@ -25,6 +25,7 @@ import ManageRooms from './components/ManageRooms';
 import './App.css';
 import ManageAccount from './components/ManageAccount';
 import ManageBookings from './components/ManageBookings';
+import ManageUsers from './components/ManageUsers';
 
 function App() {
   const [cookieVal, setCookieVal] = useState(Cookies.get("email"));
@@ -46,7 +47,7 @@ function App() {
     <div className="App">
       <Router>
         <Navbar />
-        <div className="content"> {/* Add this wrapper */}
+        <div className="content"> 
           <Routes>
             {cookieVal == undefined && <Route path='/login' element={<Login />} />}
             {cookieVal == "nazrulsa@udmercy.edu" && <Route path='/login' element={<AdminPage />} />}
@@ -69,6 +70,7 @@ function App() {
             <Route path='/currentBookings' element={<CurrentBookings />} />
             <Route path='/manageAccount' element={<ManageAccount />} />
             <Route path="/manageBookings" element={<ManageBookings />} />
+            <Route path='/ManageUsers' element={<ManageUsers />} />
           </Routes>
         </div>
         <Footer />

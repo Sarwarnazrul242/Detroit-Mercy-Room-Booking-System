@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
@@ -9,13 +9,31 @@ export default function VerifyOtp() {
     const { state } = useLocation();
     const navigate = useNavigate();
     const [otp, setOtp] = useState(new Array(6).fill(""));
+    const [timer, setTimer] = useState(60); // 1 minute countdown
+    const [showResendButton, setShowResendButton] = useState(false);
+
+    useEffect(() => {
+        if (timer > 0) {
+            const countdown = setInterval(() => {
+                setTimer(prevTimer => {
+                    if (prevTimer <= 1) {
+                        clearInterval(countdown);
+                        setShowResendButton(true);
+                        return 0;
+                    }
+                    return prevTimer - 1;
+                });
+            }, 1000);
+            return () => clearInterval(countdown);
+        }
+    }, [timer]);
 
     const handleOtpChange = (element, index) => {
         if (isNaN(element.value)) return false;
 
         setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
 
-        //Focus next input
+        // Focus next input
         if (element.nextSibling) {
             element.nextSibling.focus();
         }
@@ -41,6 +59,33 @@ export default function VerifyOtp() {
                 console.log(e);
                 toast.error("Something went wrong!");
             }
+        }
+    };
+
+    const resendOtp = async () => {
+        try {
+            const digits = '0123456789';
+            let OTP = '';
+            for (let i = 0; i < 6; i++) {
+                OTP += digits[Math.floor(Math.random() * 10)];
+            }
+            console.log(OTP);
+            await axios.post(`http://localhost:8000/sendemail`, { email: state.form.email, otp: OTP, type: 'verify' })
+                .then(res => {
+                    if (res.data === 'pass') {
+                        toast.success("New OTP sent to your email");
+                        setShowResendButton(false);
+                        setTimer(60); // Restart the countdown
+                        state.OTP = OTP; // Update OTP in state
+                    } else {
+                        toast.error("Failed to send OTP");
+                    }
+                })
+                .catch(e => {
+                    toast.error("Something went wrong");
+                });
+        } catch (e) {
+            toast.error("Something went wrong!");
         }
     };
 
@@ -75,7 +120,13 @@ export default function VerifyOtp() {
                             );
                         })}
                     </div>
-                    <Link to='/signup' className="text-blue-700 underline block mt-4 text-center">Go Back</Link>
+                    <p className="text-center">Resend OTP in {timer} seconds</p>
+                    {showResendButton && (
+                        <div className="flex justify-center mt-6">
+                            <button onClick={resendOtp} className="text-white bg-black border-0 py-2 px-6 focus:outline-none hover:bg-gray-800 rounded-full text-lg">Resend OTP</button>
+                        </div>
+                    )}
+                    <Link to='/signup' className="text-black-700 underline block mt-4 text-center">Go Back</Link>
                     <div className="flex justify-center mt-6">
                         <button onClick={verifyOtp} className="text-white bg-black border-0 py-2 px-6 focus:outline-none hover:bg-gray-800 rounded-full text-lg">Submit</button>
                     </div>

@@ -30,6 +30,14 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    isSuspended: { 
+        type: Boolean, 
+        default: false 
+    }, 
+    suspensionReason: {
+        type: String,
+        default: ''
     }
 });
 
@@ -52,11 +60,13 @@ const buildingSchema = new mongoose.Schema({
     image: {
         type: String,
     },
+    isPaused: { type: Boolean, default: false },
     rooms: [{
         name: { type: String },
         description: { type: String },
         seats: { type: Number },
         schedule: [{
+            days: [{ type: String }], // Changed to array of strings
             startTime: { type: String },
             endTime: { type: String }
         }],
@@ -65,9 +75,11 @@ const buildingSchema = new mongoose.Schema({
             whiteboard: { type: Boolean, default: false },
             tv: { type: Boolean, default: false }
         },
-        image: { type: String }
+        image: { type: String },
+        isPaused: { type: Boolean, default: false }
     }]
 });
+
 
 
 const bookingSchema = new mongoose.Schema({
@@ -75,6 +87,14 @@ const bookingSchema = new mongoose.Schema({
         type: ObjectId,
         required: true,
         ref: 'buildingCollection'
+    },
+    canceled: {
+        type: Boolean,
+        default: false
+    },
+    cancelReason: {
+        type: String,
+        default: ''
     },
     room: {
         type: String,
@@ -92,7 +112,7 @@ const bookingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    userEmail: {
+    userId: {
         type: ObjectId,
         required: true,
         ref: 'userCollection' 

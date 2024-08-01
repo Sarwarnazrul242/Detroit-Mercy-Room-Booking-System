@@ -49,6 +49,10 @@ export default function AdminPage() {
                         <i className='fa-solid fa-tasks text-3xl lg:text-5xl'></i>
                         <h2 className='title-font font-medium text-lg lg:text-2xl mt-4 text-grey-900'>Manage Bookings</h2>
                     </Link>
+                    <Link to='/ManageUsers' className='cursor-pointer w-fit m-4 hover:shadow-lg border-2 text-center border-gray-200 px-4 py-2 lg:py-6 lg:px-10 rounded-lg'>
+                        <i className='fa-solid fa-users text-3xl lg:text-5xl'></i>
+                        <h2 className='title-font font-medium text-lg lg:text-2xl mt-4 text-grey-900'>Manage Users</h2>
+                    </Link>
                 </div>
             </section>
             <ToastContainer />

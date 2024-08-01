@@ -24,6 +24,7 @@ export default function ForgotPassword() {
 
             setOtp(OTP);
             setProgress(50);
+            
 
             const fullEmail = `${email}@udmercy.edu`;
 
@@ -86,7 +87,7 @@ export default function ForgotPassword() {
                         </div>
                     </div>
 
-                    <Link to='/login' className="text-blue-700 underline">Back to login</Link>
+                    <Link to='/login' className="text-black-700 underline">Back to login</Link>
                     <div className="flex justify-center mt-6">
                         <input className="text-white bg-black border-0 py-2 px-6 focus:outline-none hover:bg-gray-800 rounded-full text-lg cursor-pointer" type="submit" value='Reset Password' />
                     </div>

@@ -27,8 +27,24 @@
 .calendar-icon {
     position: absolute;
     top: 50%;
-    left: 200px;
+    left: 290px;
     transform: translateY(-50%);
     pointer-events: none;
-    color: #555; /* Optional: Change the color of the icon */
+    color: #000000; /* Optional: Change the color of the icon */
+}
+
+
+.animate-success {
+    animation: success-animation 1s ease-out;
+}
+
+@keyframes success-animation {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

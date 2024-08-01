@@ -111,7 +111,7 @@ export default function ResetPassword() {
             </button>
           </div>
         </div>
-        <Link to='/login' className="text-blue-700 underline block mt-4">Back to login</Link>
+        <Link to='/login' className="text-black-700 underline block mt-4">Back to login</Link>
 
         <div className="flex justify-center mt-6">
           <input

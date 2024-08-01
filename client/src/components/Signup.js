@@ -83,6 +83,7 @@ export default function Signup() {
                 for (let i = 0; i < 6; i++) {
                     OTP += digits[Math.floor(Math.random() * 10)];
                 }
+                console.log(OTP);
 
                 await axios.post("http://localhost:8000/sendemail", {
                     email: fullEmail,
@@ -120,7 +121,7 @@ export default function Signup() {
                 </div>
                 <h2 className="text-2xl font-bold text-center mb-4">Create Account</h2>
                 <p className="text-center mb-8">
-                    Already have an account? <Link to='/login' className="text-blue-700 underline">Click here to Log In</Link>
+                    Already have an account? <Link to='/login' className="text-black-700 underline">Click here to Log In</Link>
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="relative mb-4">

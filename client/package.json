@@ -19,6 +19,7 @@
     "react-modal": "^3.16.1",
     "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
+    "react-time-picker": "^7.0.0",
     "react-toastify": "^10.0.5",
     "react-top-loading-bar": "^2.3.1",
     "web-vitals": "^2.1.4"

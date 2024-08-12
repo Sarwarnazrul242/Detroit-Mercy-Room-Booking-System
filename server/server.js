@@ -257,22 +257,31 @@ app.post("/login", async (req, res) => {
 });
 
 app.put('/updateAccount', async (req, res) => {
-    const { email, name, phoneNumber, password } = req.body;
+    const { email, name, phoneNumber, oldPassword, password } = req.body;
     try {
+        const user = await userCollection.findOne({ email });
+
+        // Check if the old password matches
+        if (password && !(await bcrypt.compare(oldPassword, user.password))) {
+            return res.json({ success: false, message: "Old password is incorrect" });
+        }
+
         const updateData = { name, phoneNumber };
         if (password) {
             updateData.password = await bcrypt.hash(password, 10);
         }
+
         await userCollection.updateOne(
             { email },
             { $set: updateData }
         );
-        res.json("success");
+        res.json({ success: true, message: "Account updated successfully" });
     } catch (e) {
         console.error(e);
-        res.json("fail");
+        res.json({ success: false, message: "Failed to update account" });
     }
 });
+
 
 // Add this to the server.js file
 app.get('/getUsers', async (req, res) => {
@@ -294,6 +303,36 @@ app.delete('/deleteUser/:id', async (req, res) => {
         res.status(500).json("fail");
     }
 });
+
+app.delete('/deleteAccount', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await userCollection.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Incorrect password' });
+        }
+
+        // Unset the userId in bookings
+        await bookingCollection.updateMany(
+            { userId: user._id },
+            { $unset: { userId: "" } }
+        );
+
+        await userCollection.deleteOne({ email });
+
+        res.json({ success: true, message: 'Account deleted successfully' });
+    } catch (e) {
+        console.error('Error deleting account:', e);
+        res.status(500).json({ success: false, message: 'Error deleting account' });
+    }
+});
+
 
 
 
@@ -625,9 +664,12 @@ app.post('/bookRoom', async (req, res) => {
             date,
             startTime,
             endTime,
-            userId: user._id // Use the user's ObjectId
+            userId: user._id, // Store the user's ObjectId
+            userName: user.name, // Store the user's name
+            userEmail: user.email, // Store the user's email
+            userStatus: user.status // Store the user's status
         });
-        
+
         await booking.save();
         res.json('success');
     } catch (err) {
@@ -636,20 +678,6 @@ app.post('/bookRoom', async (req, res) => {
     }
 });
 
-// app.put('/suspendUser/:id', async (req, res) => {
-//     try {
-//         const userId = req.params.id;
-//         const { isSuspended } = req.body;
-//         await userCollection.updateOne(
-//             { _id: userId },
-//             { $set: { isSuspended: isSuspended } }
-//         );
-//         res.json('success');
-//     } catch (e) {
-//         console.error('Error suspending/unsuspending user:', e);
-//         res.status(500).json('fail');
-//     }
-// });
 
 app.put('/suspendUser/:id', async (req, res) => {
     const { id } = req.params;

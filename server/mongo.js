@@ -88,14 +88,6 @@ const bookingSchema = new mongoose.Schema({
         required: true,
         ref: 'buildingCollection'
     },
-    canceled: {
-        type: Boolean,
-        default: false
-    },
-    cancelReason: {
-        type: String,
-        default: ''
-    },
     room: {
         type: String,
         required: true
@@ -114,10 +106,31 @@ const bookingSchema = new mongoose.Schema({
     },
     userId: {
         type: ObjectId,
-        required: true,
         ref: 'userCollection' 
+    },
+    userName: {
+        type: String,
+        required: true
+    },
+    userEmail: {
+        type: String,
+        required: true
+    },
+    userStatus: {
+        type: String,
+        required: true,
+        enum: ['Faculty', 'Student', 'Staff']
+    },
+    canceled: {
+        type: Boolean,
+        default: false
+    },
+    cancelReason: {
+        type: String,
+        default: ''
     }
 });
+
 
 const bookingCollection = mongoose.model('bookingCollection', bookingSchema);
 const userCollection = mongoose.model('userCollection', userSchema);

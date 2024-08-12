@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-export default function Navbar() {
+export default function Navbar({ cookieVal }) {  // Accept cookieVal as a prop
     const [showMenu, setShowMenu] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
     const dropdownRef = useRef(null);
 
@@ -19,7 +18,6 @@ export default function Navbar() {
 
     const logOut = () => {
         Cookies.remove('email');
-        setIsLoggedIn(false);
         setShowDropdown(false); // Hide the dropdown
         navigate('/login');
     }
@@ -42,13 +40,6 @@ export default function Navbar() {
         };
     }, [showDropdown]);
 
-    useEffect(() => {
-        const email = Cookies.get('email');
-        if (email) {
-            setIsLoggedIn(true);
-        }
-    }, []);
-
     return (
         <div>
             <header className="bg-white md:flex md:justify-between md:items-center md:px-6 md:py-4 z-50 relative">
@@ -66,7 +57,7 @@ export default function Navbar() {
                 </div>
 
                 <nav className={`px-6 pt-2 pb-2 md:flex ${showMenu ? "block" : "hidden"}`}>
-                    {isLoggedIn && (
+                    {cookieVal && (
                         <button
                             onClick={() => navigate('/login')}
                             className="block px-4 py-2 text-black font-semibold rounded hover:bg-gray-300 md:ml-4"
@@ -80,7 +71,7 @@ export default function Navbar() {
                         </button>
                         {showDropdown && (
                             <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
-                                {isLoggedIn ? (
+                                {cookieVal ? (
                                     <>
                                         <button onClick={() => navigate('/manageAccount')} className='block w-full text-left px-4 py-2 text-black font-semibold rounded hover:bg-gray-300'>Manage Account</button>
                                         <button onClick={logOut} className='block w-full text-left px-4 py-2 text-black font-semibold rounded hover:bg-gray-300'>Log Out</button>

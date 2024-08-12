@@ -118,15 +118,36 @@ export default function BuildingDetails() {
     };
 
     const openModal = (room) => {
-        if (selectedDate && startTime) {
+        let hasError = false;
+        if (!selectedDate) {
+            setDateError('Please select a date');
+            hasError = true;
+        } else {
+            setDateError(''); // Clear the error if the date is selected
+        }
+    
+        if (!startTime) {
+            setTimeError('Please select a start time');
+            hasError = true;
+        } else {
+            setTimeError(''); // Clear the error if the time is selected
+        }
+    
+        if (!endTime) {
+            setEndTimeError('Please select an end time');
+            hasError = true;
+        } else {
+            setEndTimeError(''); // Clear the error if the end time is selected
+        }
+    
+        if (!hasError) {
             setSelectedRoom(room);
             setIsBookingSuccessful(false);
             setModalIsOpen(true);
-        } else {
-            toast.error('Please select a date and start time before booking.');
         }
     };
-
+    
+    
     const closeModal = () => {
         setSelectedRoom(null);
         setModalIsOpen(false);
@@ -164,79 +185,98 @@ export default function BuildingDetails() {
         closeModal();
     };
 
+    const [dateError, setDateError] = useState('');
+    const [timeError, setTimeError] = useState('');
+    const [endTimeError, setEndTimeError] = useState('');
+
+
+
     if (!building) return <p>Loading...</p>;
 
     return (
-        <div className="min-h-screen bg-white p-4 overflow-auto">
-            <div className="flex flex-wrap justify-center gap-4 mb-4 bg-gray-100 p-4 rounded-lg shadow-md">
-                <div className="flex-1 max-w-xs">
-                    <label className="block font-semibold mb-2">Select Date</label>
-                    <div className="relative">
-                        <DatePicker
-                            selected={selectedDate}
-                            onChange={(date) => {
-                                setSelectedDate(date);
-                                setStartTime('');
-                                setEndTime('');
-                            }}
-                            className="w-full border rounded-lg p-2 pr-40"
-                            dateFormat="MM/dd/yyyy"
-                            minDate={new Date()} // Disable past dates
-                        />
-                        <FaCalendarAlt className="calendar-icon" />
-                    </div>
-                </div>
-                <div className="flex-1 max-w-xs">
-                    <label className="block font-semibold mb-2">Start Time</label>
-                    <select
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full border rounded-lg p-2"
-                        disabled={!selectedDate} // Disable if no date selected
-                    >
-                        <option value="">Select start time</option>
-                        {timeSlots.map(time => (
-                            <option key={time} value={time}>
-                                {formatTime(time)}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                {startTime && (
-                    <div className="flex-1 max-w-xs">
-                        <label className="block font-semibold mb-2">End Time</label>
-                        <select
-                            value={endTime}
-                            onChange={(e) => setEndTime(e.target.value)}
-                            className="w-full border rounded-lg p-2"
-                        >
-                            <option value="">Select end time</option>
-                            {timeSlots
-                                .filter(time => !startTime || time > startTime)
-                                .map(time => (
-                                    <option key={time} value={time}>
-                                        {formatTime(time)}
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-                )}
-                <div className="flex-1 max-w-xs">
-                    <label className="block font-semibold mb-2">Search Room</label>
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full border rounded-lg p-2"
-                        placeholder="Enter room name"
+    <div className="min-h-screen bg-white p-4 overflow-auto">
+        <div className="flex flex-wrap justify-center gap-4 mb-4 bg-gray-100 p-4 rounded-lg shadow-md">
+            {/* Existing filter controls */}
+            <div className="flex-1 max-w-xs">
+                <label className="block font-semibold mb-2">Select Date</label>
+                <div className="relative">
+                    <DatePicker
+                        selected={selectedDate}
+                        onChange={(date) => {
+                            setSelectedDate(date);
+                            setStartTime('');
+                            setEndTime('');
+                            setDateError('');
+                        }}
+                        className="w-full border rounded-lg p-2 pr-40"
+                        dateFormat="MM/dd/yyyy"
+                        minDate={new Date()} // Disable past dates
                     />
+                    <FaCalendarAlt className="calendar-icon" />
                 </div>
-                <div className="flex items-end">
-                    <button onClick={clearFilters} className="bg-black text-white py-2 px-4 rounded-lg">Clear Filters</button>
-                </div>
+                {dateError && <p className="text-red-500 text-sm mt-1">{dateError}</p>}
             </div>
-            <div className="grid grid-cols-1 gap-8 max-w-7xl mx-auto overflow-auto h-[70vh]">
-                {filteredRooms.map(room => (
+            <div className="flex-1 max-w-xs">
+                <label className="block font-semibold mb-2">Start Time</label>
+                <select
+                    value={startTime}
+                    onChange={(e) => {
+                        setStartTime(e.target.value);
+                        setTimeError(''); // Clear the error when time is selected
+                    }}
+                    className="w-full border rounded-lg p-2"
+                    disabled={!selectedDate} // Disable if no date selected
+                >
+                    <option value="">Select start time</option>
+                    {timeSlots.map(time => (
+                        <option key={time} value={time}>
+                            {formatTime(time)}
+                        </option>
+                    ))}
+                </select>
+                {timeError && <p className="text-red-500 text-sm mt-1">{timeError}</p>}
+            </div>
+            {startTime && (
+                <div className="flex-1 max-w-xs">
+                    <label className="block font-semibold mb-2">End Time</label>
+                    <select
+                        value={endTime}
+                        onChange={(e) => {
+                            setEndTime(e.target.value);
+                            setEndTimeError(''); // Clear the error when the end time is selected
+                        }}
+                        className="w-full border rounded-lg p-2"
+                    >
+                        <option value="">Select end time</option>
+                        {timeSlots
+                            .filter(time => !startTime || time > startTime)
+                            .map(time => (
+                                <option key={time} value={time}>
+                                    {formatTime(time)}
+                                </option>
+                            ))}
+                    </select>
+                    {endTimeError && <p className="text-red-500 text-sm mt-1">{endTimeError}</p>}
+                </div>
+            )}
+            <div className="flex-1 max-w-xs">
+                <label className="block font-semibold mb-2">Search Room</label>
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full border rounded-lg p-2"
+                    placeholder="Enter room name"
+                />
+            </div>
+            <div className="flex items-end">
+                <button onClick={clearFilters} className="bg-black text-white py-2 px-4 rounded-lg">Clear Filters</button>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 max-w-7xl mx-auto overflow-auto h-[70vh]">
+            {filteredRooms.length > 0 ? (
+                filteredRooms.map(room => (
                     <div key={room._id} className="border rounded-lg p-4 shadow-md flex cursor-pointer" onClick={() => openModal(room)}>
                         {room.image && (
                             <img 
@@ -254,16 +294,22 @@ export default function BuildingDetails() {
                             <ul className="list-disc list-inside">
                                 {room.schedule.map((schedule, index) => (
                                     <li key={index}>
-                                         {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} on {schedule.days.join(', ')}
+                                        {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} on {schedule.days.join(', ')}
                                     </li>
                                 ))}
                             </ul>
                         </div>
                     </div>
-                ))}
-            </div>
-            {selectedRoom && (
-                <Modal
+                ))
+            ) : (
+                <div className="flex justify-center items-center h-full">
+                    <p className="text-3xl font-bold text-gray-600">No rooms available for this building at this time.</p>
+                </div>
+            )}
+        </div>
+
+        {selectedRoom && (
+            <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
                 contentLabel="Room Details"
@@ -326,8 +372,8 @@ export default function BuildingDetails() {
                     )}
                 </div>
             </Modal>
-            )}
-            <ToastContainer />
-        </div>
-    );
+        )}
+        <ToastContainer />
+    </div>
+);
 }

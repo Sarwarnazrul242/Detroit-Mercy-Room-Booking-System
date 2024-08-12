@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from "axios";
 import { ToastContainer, toast } from 'react-toastify';
-import './MyAccount'; // Import the CSS file for additional styling
+import './MyAccount'; 
 
 export default function AdminPage() {
     const cookieValue = Cookies.get("email");

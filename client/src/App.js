@@ -46,7 +46,7 @@ function App() {
   return (
     <div className="App">
       <Router>
-        <Navbar />
+      <Navbar cookieVal={cookieVal} />
         <div className="content"> 
           <Routes>
             {cookieVal == undefined && <Route path='/login' element={<Login />} />}

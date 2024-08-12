@@ -5,17 +5,21 @@ import 'react-toastify/dist/ReactToastify.css';
 import Cookies from 'js-cookie';
 import InputMask from 'react-input-mask';
 import { Link } from 'react-router-dom';
+import Modal from 'react-modal';
 
 export default function ManageAccount() {
     const [formData, setFormData] = useState({
         name: '',
         phoneNumber: '',
+        oldPassword: '',
         password: '',
         confirmPassword: '',
         email: '',
         status: ''
     });
     const [phoneError, setPhoneError] = useState('');
+    const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
     const email = Cookies.get('email');
 
     useEffect(() => {
@@ -59,7 +63,7 @@ export default function ManageAccount() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
+        if (formData.password && formData.password !== formData.confirmPassword) {
             toast.error("Passwords do not match!");
             return;
         }
@@ -68,13 +72,38 @@ export default function ManageAccount() {
             return;
         }
         try {
-            await axios.put("http://localhost:8000/updateAccount", {
+            const res = await axios.put("http://localhost:8000/updateAccount", {
                 email: formData.email,
                 name: formData.name,
                 phoneNumber: formData.phoneNumber,
+                oldPassword: formData.oldPassword,
                 password: formData.password
             });
-            toast.success("Account updated successfully!");
+
+            if (res.data.success) {
+                toast.success(res.data.message);
+            } else {
+                toast.error(res.data.message);
+            }
+        } catch (e) {
+            toast.error("Something went wrong!");
+        }
+    }
+
+    const handleDeleteAccount = async () => {
+        try {
+            const res = await axios.delete("http://localhost:8000/deleteAccount", {
+                data: { email: formData.email, password: deletePassword }
+            });
+
+            if (res.data.success) {
+                toast.success(res.data.message);
+                // Redirect to login or home page after account deletion
+                Cookies.remove('email');
+                window.location.href = '/signup';
+            } else {
+                toast.error(res.data.message);
+            }
         } catch (e) {
             toast.error("Something went wrong!");
         }
@@ -118,6 +147,18 @@ export default function ManageAccount() {
                         )}
                     </InputMask>
                     {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+                </div>
+                <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="oldPassword">
+                        Old Password
+                    </label>
+                    <input
+                        type="password"
+                        name="oldPassword"
+                        value={formData.oldPassword}
+                        onChange={handleChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    />
                 </div>
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
@@ -182,6 +223,50 @@ export default function ManageAccount() {
                     </Link>
                 </div>
             </form>
+
+            <div className="mt-6">
+                <button
+                    onClick={() => setDeleteModalIsOpen(true)}
+                    className="bg-customRed hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                    Delete Account
+                </button>
+            </div>
+
+            <Modal
+                isOpen={deleteModalIsOpen}
+                onRequestClose={() => setDeleteModalIsOpen(false)}
+                contentLabel="Delete Account"
+                className="modal"
+                overlayClassName="overlay"
+            >
+                <div className="p-4 bg-white rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold mb-4">Delete Account</h2>
+                    <p className="mb-4">Please enter your password to confirm account deletion:</p>
+                    <input
+                        type="password"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-4"
+                        placeholder="Enter your password"
+                    />
+                    <div className="flex justify-end">
+                        <button
+                            onClick={handleDeleteAccount}
+                            className="bg-customRed hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        >
+                            Confirm Delete
+                        </button>
+                        <button
+                            onClick={() => setDeleteModalIsOpen(false)}
+                            className="ml-4 bg-gray-300 text-black py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <ToastContainer />
         </div>
     );

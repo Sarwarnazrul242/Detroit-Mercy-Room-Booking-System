@@ -27,7 +27,7 @@ export default function ManageBookings() {
         building: '',
         room: '',
         status: '',
-        bookingType: 'upcoming',
+        bookingType: 'all', // Default to show all bookings
     });
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [bookingToDelete, setBookingToDelete] = useState(null);
@@ -40,7 +40,7 @@ export default function ManageBookings() {
             try {
                 const res = await axios.get('http://localhost:8000/getBookings');
                 setAllBookings(res.data);
-                setFilteredBookings(res.data);
+                setFilteredBookings(res.data); // Initially show all bookings
             } catch (e) {
                 console.error("Error fetching bookings:", e);
                 toast.error("Something went wrong while fetching bookings!");
@@ -82,7 +82,7 @@ export default function ManageBookings() {
             building: '',
             room: '',
             status: '',
-            bookingType: 'upcoming',
+            bookingType: 'all', // Reset to show all bookings
         });
         setRooms([]);
         setFilteredBookings(allBookings);
@@ -236,7 +236,7 @@ export default function ManageBookings() {
                 <button onClick={clearFilters} className="bg-black text-white py-2 px-4 rounded mb-2 w-full md:w-auto">Clear Filters</button>
             </div>
             <div className="scrollable-container">
-                {filters.bookingType === 'all' ? (
+                {filters.bookingType === 'all' && (
                     <>
                         <div className="mb-8">
                             <h2 className="text-3xl font-bold mb-4">Upcoming Bookings</h2>
@@ -266,14 +266,14 @@ export default function ManageBookings() {
                                 {pastBookings.map((booking, index) => (
                                     <div key={index} className="booking-card border rounded-lg p-4 shadow-md flex flex-col items-center">
                                         <div className="text-center">
-                                            <h2 className="booking-card-title text-xl font-bold mb-2">{booking.userId?.name || 'N/A'}</h2>
-                                            <p className="booking-card-email text-gray-700 mb-2">{booking.userId?.email || 'N/A'}</p>
-                                            <p className="booking-card-status text-gray-700 mb-2">{booking.userId?.status || 'N/A'}</p>
-                                            <p className="booking-card-date text-gray-700 mb-2">Date: {new Date(booking.date).toLocaleDateString()}</p>
-                                            <p className="booking-card-time text-gray-700 mb-2">Time: {formatTime(booking.startTime)} - {formatTime(booking.endTime)}</p>
-                                            <p className="booking-card-building text-gray-700 mb-2">Building: {booking.buildingId?.name || 'N/A'}</p>
-                                            <p className="booking-card-room text-gray-700 mb-2">Room: {booking.room}</p>
-                                            {booking.canceled && <p className="text-red-500 mb-2">Canceled</p>}
+                                        <h2 className="booking-card-title text-xl font-bold mb-2">{booking.userName || 'N/A'}</h2>
+                                        <p className="booking-card-email text-gray-700 mb-2">{booking.userEmail || 'N/A'}</p>
+                                        <p className="booking-card-status text-gray-700 mb-2">{booking.userStatus || 'N/A'}</p>
+                                        <p className="booking-card-date text-gray-700 mb-2">Date: {new Date(booking.date).toLocaleDateString()}</p>
+                                        <p className="booking-card-time text-gray-700 mb-2">Time: {formatTime(booking.startTime)} - {formatTime(booking.endTime)}</p>
+                                        <p className="booking-card-building text-gray-700 mb-2">Building: {booking.buildingId?.name || 'N/A'}</p>
+                                        <p className="booking-card-room text-gray-700 mb-2">Room: {booking.room}</p>
+                                        {booking.canceled && <p className="text-red-500 mb-2">Canceled</p>}
                                             <div className="flex justify-center w-full mt-4">
                                                 <button onClick={() => openModal(booking._id)} className="bg-customRed text-white py-1 px-3 rounded">Delete</button>
                                             </div>
@@ -281,32 +281,27 @@ export default function ManageBookings() {
                                     </div>
                                 ))}
                             </div>
-
                         </div>
                     </>
-                ) : (
+                )}
+                {filters.bookingType !== 'all' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[65vh] overflow-auto">
                         {filteredBookings.map((booking, index) => (
                             <div key={index} className="booking-card border rounded-lg p-4 shadow-md flex flex-col items-center">
-                                <div className="text-center">
-                                    <h2 className="booking-card-title text-xl font-bold mb-2">{booking.userId?.name || 'N/A'}</h2>
-                                    <p className="booking-card-email text-gray-700 mb-2">{booking.userId?.email || 'N/A'}</p>
-                                    <p className="booking-card-status text-gray-700 mb-2">{booking.userId?.status || 'N/A'}</p>
-                                    <p className="booking-card-date text-gray-700 mb-2">Date: {new Date(booking.date).toLocaleDateString()}</p>
-                                    <p className="booking-card-time text-gray-700 mb-2">Time: {formatTime(booking.startTime)} - {formatTime(booking.endTime)}</p>
-                                    <p className="booking-card-building text-gray-700 mb-2">Building: {booking.buildingId?.name || 'N/A'}</p>
-                                    <p className="booking-card-room text-gray-700 mb-2">Room: {booking.room}</p>
-                                    {booking.canceled && <p className="text-red-500 mb-2">Canceled</p>}
-                                    <div className="flex space-x-2">
-                                    <div className="flex justify-center w-full mt-4">
-                                                <button onClick={() => openModal(booking._id)} className="bg-customRed text-white py-1 px-3 rounded">Delete</button>
-                                            </div>
-                                        {!booking.canceled && filters.bookingType === 'upcoming' && (
-                                            <button onClick={() => openCancelModal(booking._id)} className="bg-customRed text-white py-1 px-3 rounded mt-4">Cancel Booking</button>
-                                        )}
-                                    </div>
+                            <div className="text-center">
+                                <h2 className="booking-card-title text-xl font-bold mb-2">{booking.userId?.name || 'N/A'}</h2>
+                                <p className="booking-card-email text-gray-700 mb-2">{booking.userId?.email || 'N/A'}</p>
+                                <p className="booking-card-status text-gray-700 mb-2">{booking.userId?.status || 'N/A'}</p>
+                                <p className="booking-card-date text-gray-700 mb-2">Date: {new Date(booking.date).toLocaleDateString()}</p>
+                                <p className="booking-card-time text-gray-700 mb-2">Time: {formatTime(booking.startTime)} - {formatTime(booking.endTime)}</p>
+                                <p className="booking-card-building text-gray-700 mb-2">Building: {booking.buildingId?.name || 'N/A'}</p>
+                                <p className="booking-card-room text-gray-700 mb-2">Room: {booking.room}</p>
+                                <div className="flex space-x-2">
+                                    <button onClick={() => openCancelModal(booking._id)} className="bg-customRed text-white py-1 px-3 rounded mt-4">Cancel Booking</button>
+                                    <button onClick={() => openModal(booking._id)} className="bg-customRed text-white py-1 px-3 rounded mt-4">Delete</button>
                                 </div>
                             </div>
+                        </div>
                         ))}
                     </div>
                 )}

@@ -39,6 +39,8 @@ export default function ManageRooms() {
     const [showEndTime, setShowEndTime] = useState([false]);
     const [showMenu, setShowMenu] = useState({});
     const navigate = useNavigate();
+    const [roomImagePreview, setRoomImagePreview] = useState(null);
+
 
     useEffect(() => {
         const fetchBuilding = async () => {
@@ -63,8 +65,14 @@ export default function ManageRooms() {
         setAmenities(room ? (room.amenities || { projector: false, whiteboard: false, tv: false }) : { projector: false, whiteboard: false, tv: false });
         setSchedule(room ? room.schedule : [{ startTime: '', endTime: '', days: [] }]);
         setShowEndTime([false]); // Reset showEndTime state
+        if (room && room.image) {
+            setRoomImagePreview(`http://localhost:8000/uploads/${room.image}`);
+        } else {
+            setRoomImagePreview(null);
+        }
         setIsModalOpen(true);
     };
+    
 
     const openDeleteModal = (room) => {
         setCurrentRoom(room);
@@ -184,8 +192,11 @@ export default function ManageRooms() {
     };
 
     const handleImageChange = (event) => {
-        setRoomImage(event.target.files[0]);
+        const file = event.target.files[0];
+        setRoomImage(file);
+        setRoomImagePreview(URL.createObjectURL(file));
     };
+    
 
     const toggleMenu = (roomId) => {
         setShowMenu((prevState) => ({
@@ -401,40 +412,44 @@ export default function ManageRooms() {
                             </div>
                         </div>
                         <div className='space-y-4'>
-                            <div>
-                                <label className='block text-lg text-gray-700 mb-2'>Room Image</label>
-                                <div className='relative border-2 border-dashed border-gray-300 p-6 w-full h-64 flex items-center justify-center'>
-                                    <input
-                                        type='file'
-                                        onChange={handleImageChange}
-                                        className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
-                                    />
-                                    {roomImage ? (
-                                        <div className='relative w-full h-full'>
-                                            <button
-                                                type='button'
-                                                onClick={() => setRoomImage(null)}
-                                                className='absolute top-2 right-2 text-red-500 hover:text-red-700'
-                                                style={{ fontSize: '32px' }}
-                                            >
-                                                &times;
-                                            </button>
-                                            <img
-                                                src={URL.createObjectURL(roomImage)}
-                                                alt='Room'
-                                                className='w-full h-full object-contain'
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className='text-center pointer-events-none'>
-                                            <svg xmlns='http://www.w3.org/2000/svg' className='h-16 w-16 text-gray-400 mx-auto' viewBox='0 0 20 20' fill='currentColor'>
-                                                <path fillRule='evenodd' d='M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 4a3 3 0 100 6 3 3 0 000-6zM5 7a5 5 0 100 10 5 5 0 000-10zm10.707 4.293a1 1 0 00-1.414 0L12 13.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l3-3a 1 1 0 000-1.414z' clipRule='evenodd' />
-                                            </svg>
-                                            <span className='text-gray-500 mt-2'>Upload room image</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                        <div>
+                            <label className='block text-lg text-gray-700 mb-2'>Room Image</label>
+                            <div className='relative border-2 border-dashed border-gray-300 p-6 w-full h-64 flex items-center justify-center'>
+                                <input
+                                    type='file'
+                                    onChange={handleImageChange}
+                                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+                                />
+                                {roomImagePreview ? (
+                                    <div className='relative w-full h-full'>
+                                        <button
+                                            type='button'
+                                            onClick={() => {
+                                                setRoomImage(null);
+                                                setRoomImagePreview(null);
+                                            }}
+                                            className='absolute top-2 right-2 text-red-500 hover:text-red-700'
+                                            style={{ fontSize: '32px' }}
+                                        >
+                                            &times;
+                                        </button>
+                                        <img
+                                            src={roomImagePreview}
+                                            alt='Room'
+                                            className='w-full h-full object-contain'
+                                        />
+                                    </div>
+                                ) : (
+            <div className='text-center pointer-events-none'>
+                <svg xmlns='http://www.w3.org/2000/svg' className='h-16 w-16 text-gray-400 mx-auto' viewBox='0 0 20 20' fill='currentColor'>
+                    <path fillRule='evenodd' d='M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 4a3 3 0 100 6 3 3 0 000-6zM5 7a5 5 0 100 10 5 5 0 000-10zm10.707 4.293a1 1 0 00-1.414 0L12 13.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l3-3a 1 1 0 000-1.414z' clipRule='evenodd' />
+                </svg>
+                <span className='text-gray-500 mt-2'>Upload room image</span>
+            </div>
+        )}
+    </div>
+</div>
+
                         </div>
                     </form>
                     <div className='mt-8'>

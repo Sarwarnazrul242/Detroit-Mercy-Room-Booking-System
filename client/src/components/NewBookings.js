@@ -44,7 +44,7 @@ export default function NewBookings() {
                     </div>
                 ))}
             </div>
-            <Link to='/login' className='text-blue-700 underline mt-4'>Back to My Account</Link>
+            {/* <Link to='/login' className='text-blue-700 underline mt-4'>Back to My Account</Link> */}
             <ToastContainer />
         </div>
     );

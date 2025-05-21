@@ -3,29 +3,31 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cookies from 'js-cookie';
-import Home from './components/Home';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Login from './components/Login';
-import Signup from './components/Signup';
+
+// Updated imports based on new folder structure
+import Home from './components/home/Home';
+import Navbar from './components/shared/Navbar';
+// import Footer from './components/shared/Footer';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
 import { useEffect, useState } from 'react';
-import MyAccount from './components/MyAccount';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import VerifyOtp from './components/VerifyOtp';
-import VerifyOtpReset from './components/VerifyOtpReset';
-import AdminPage from './components/AdminPage';
-import AddBuilding from './components/AddBuilding';
-import NewBookings from './components/NewBookings';
-import ManageBuildings from './components/ManageBuildings';
-import EditBuilding from './components/EditBuilding';
-import BuildingDetails from './components/BuildingDetails';
-import CurrentBookings from './components/CurrentBookings';
-import ManageRooms from './components/ManageRooms';
+import MyAccount from './components/users/MyAccount';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
+import VerifyOtp from './components/auth/VerifyOtp';
+import VerifyOtpReset from './components/auth/VerifyOtpReset';
+import AdminPage from './components/admin/AdminPage';
+import AddBuilding from './components/buildings/AddBuilding';
+import NewBookings from './components/bookings/NewBookings';
+import ManageBuildings from './components/buildings/ManageBuildings';
+import EditBuilding from './components/buildings/EditBuilding';
+import BuildingDetails from './components/buildings/BuildingDetails';
+import CurrentBookings from './components/bookings/CurrentBookings';
+import ManageRooms from './components/rooms/ManageRooms';
 import './App.css';
-import ManageAccount from './components/ManageAccount';
-import ManageBookings from './components/ManageBookings';
-import ManageUsers from './components/ManageUsers';
+import ManageAccount from './components/users/ManageAccount';
+import ManageBookings from './components/bookings/ManageBookings';
+import ManageUsers from './components/users/ManageUsers';
 
 function App() {
   const [cookieVal, setCookieVal] = useState(Cookies.get("email"));
@@ -73,7 +75,7 @@ function App() {
             <Route path='/ManageUsers' element={<ManageUsers />} />
           </Routes>
         </div>
-        <Footer />
+        {/* <Footer /> */}
         <ToastContainer />
       </Router>
     </div>

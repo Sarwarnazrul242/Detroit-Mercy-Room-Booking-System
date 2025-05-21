@@ -4,14 +4,14 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent scrolling on the main page */
+  /* overflow: hidden;  Allow scrolling on the main page */
 }
 
 .App {
   display: flex;
   flex-direction: column;
   min-height: 100vh; /* Full height of the viewport */
-  overflow: hidden; /* Prevent scrolling on the App container */
+  /* overflow: hidden;  Allow scrolling on the App container */
 }
 
 .content {

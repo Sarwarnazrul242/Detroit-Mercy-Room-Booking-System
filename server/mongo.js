@@ -1,12 +1,26 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
-mongoose.connect("mongodb://localhost:27017/room_booking")
+
+// MongoDB Atlas connection string
+const MONGODB_URI = process.env.MONGODB_URI;
+
+console.log('Environment variables:', {
+    MONGODB_URI: MONGODB_URI ? 'URI is set' : 'URI is not set'
+});
+
+if (!MONGODB_URI) {
+    console.error("MONGODB_URI is not defined in environment variables");
+    process.exit(1);
+}
+
+mongoose.connect(MONGODB_URI)
 .then(() => {
-    console.log("Database connected")
+    console.log("Database connected successfully to MongoDB Atlas")
 })
-.catch (() => {
-    console.log("Connection failed")
-})
+.catch((error) => {
+    console.error("MongoDB connection error:", error.message)
+    process.exit(1);
+});
 
 const userSchema = new mongoose.Schema({
     name: {
